@@ -1,0 +1,8 @@
+// import { Connection, PublicKey } from "@solana/web3.js";
+// import BN from "bn.js";
+// import { SolendActionCore, ActionType, PoolType, ReserveType, EnvironmentType } from "@solendprotocol/solend-sdk";
+
+// async function main() {
+//   const sla = SolendActionCore;
+//   sla.buildDepositTxns()
+// }
