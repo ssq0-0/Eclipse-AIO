@@ -8,7 +8,7 @@ interface VersionInfo {
 
 const repo = {
     LinkRepo: "https://api.github.com/repos/ssq0-0/Eclipse-AIO/releases/latest",
-    SoftVersion: "v0.1.0-alpha", 
+    SoftVersion: "v0.1.0", 
 };
 
 export async function checkVersion(logger: LoggerService): Promise<void> {
