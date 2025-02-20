@@ -102,6 +102,10 @@ async function performAction(acc: Account, connection:Connection, logger: Logger
                 retryCount++;
                 continue;
             }
+            if (action.TypeAction === "collectorDone") {
+                logger.info(`[${acc.Address}] Слив токенов в ETH завершен.`)
+                break;
+            }
             const modulesInstance = modules.get(module);
             if (!modulesInstance) {
                 throw new Error(`Модуль ${module} не инициализирован`);

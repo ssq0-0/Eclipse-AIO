@@ -2,7 +2,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { Account } from "../data";
 import { getBalance, getMinSwapValue, getMaxSwapValue, checkAndForceSwap, createSwapAction, createUnderdogAction, findAlternativeToken, calculateSwapAmount, determineTokenTo, ensureValidTokenPair } from "./helpers";
 import { LoggerService } from "../logger/logger";
-import {ETH, MINOR_ADDR, SOL} from "../globals/globals";
+import {ETH, MINOR_ADDR, SOL, USDC, USDT} from "../globals/globals";
 import { ActionProcess } from "../globals/types";
 
 const actionsgenerators: Map<string, Function> = new Map([
@@ -11,6 +11,7 @@ const actionsgenerators: Map<string, Function> = new Map([
     ['Lifinity', SwapGenerateAction],
     ['Relay', RelayActionGenerate],
     ['Underdog', GenerateUnderdog],
+    ['Collector', CollectorAction],
     // ['Random', ] // под масштабирование
 ]);
 
@@ -93,6 +94,43 @@ export async function SwapGenerateAction(acc: Account, connection: Connection, m
   
     return createSwapAction(acc, tokenFrom, tokenTo, amount, logger, module, false);
 }  
+
+export async function CollectorAction(acc: Account, connection: Connection, module: string, logger: LoggerService): Promise<ActionProcess | null> {
+    let tokens = [
+        {token: USDC, minBalance: 0.2}, 
+        {token: USDT, minBalance: 0.2},
+        {token: SOL, minBalance:0.001}
+    ];
+
+    let tokenFrom: PublicKey | null = null;
+    let tokenBalance = 0;
+
+    for (const { token, minBalance} of tokens) {
+        tokenBalance = await getBalance(acc, connection, token, logger);
+        if (tokenBalance >= minBalance) {
+            tokenFrom = token;
+            break;
+        }
+    }
+    if (!tokenFrom) {
+        logger.warn(`[${acc.Address}] Нет токенов для свапа. Завершаем работу.`);
+        return {
+            TokenFrom: MINOR_ADDR,
+            TokenTo: MINOR_ADDR,
+            Amount: tokenBalance,
+            TypeAction: "collectorDone",
+            Module: module
+        };
+    }
+
+    return {
+        TokenFrom: tokenFrom,
+        TokenTo: ETH,
+        Amount: tokenBalance,
+        TypeAction: "Swap",
+        Module: module
+    };
+}
 
 export async function GenerateUnderdog(acc: Account, connection: Connection, module:string, logger: LoggerService): Promise<ActionProcess> {
     const action = createUnderdogAction();

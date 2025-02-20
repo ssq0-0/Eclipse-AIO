@@ -6,6 +6,7 @@ import { LoggerService } from "../logger/logger";
 import { Lifinity } from "./lifinity";
 import { UnderDog } from "./underdog";
 import { Relay } from "./relay";
+import { Collector } from "./collector";
 
 export interface ModulesFasad {
     Action(acc: Account, connection: Connection, inputMint: PublicKey, outputMint: PublicKey, amount: number): Promise<string>;
@@ -26,7 +27,8 @@ export class ModulesFactory {
                     ["op", config.op],
                     ["base", config.base],
                     ["linea", config.linea],
-                ]))]
+                ]))],
+                ["Collector", new Collector(config.orca_api, config.eclipse, logger)]
             ]);
         }
         return this.modules;
