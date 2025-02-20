@@ -1,0 +1,18 @@
+{
+    "_developer_settings":"The developer configuration contains application endpoints and rpc's",
+    "_token":"WARNING! Token need for access api for generate photos in underdog module",
+    
+    "solar_api": "https://api.solarstudios.co",
+    "orca_api":"https://pools-api-eclipse.mainnet.orca.so/swap-quote",
+    "relay":"https://api.relay.link/quote",
+    "underdog_api":"https://eclipse.underdogprotocol.com/api/collections",
+    "dev_api":"https://api.unsplash.com/photos/random?client_id=",
+    "arb":"https://arbitrum.drpc.org",
+    "op":"https://optimism.drpc.org",
+    "base":"https://base.drpc.org",
+    "linea":"https://linea.drpc.org",
+    "eclipse":"https://mainnetbeta-rpc.eclipse.xyz",
+
+
+    "token":"4FASYoX4OVD4h1LVoS8TdIkTeEqCI6ixL2YWBB22vXw"
+}
