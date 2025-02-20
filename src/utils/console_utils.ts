@@ -19,6 +19,7 @@ export async function userChoice(): Promise<string> {
         "3. Lifinity",
         "4. Underdog",
         "5. Relay",
+        "6. Collector",
         "0. Exit",
     ];
 
@@ -34,6 +35,7 @@ export async function userChoice(): Promise<string> {
             case "Lifinity":
             case "Underdog":
             case "Relay":
+            case "Collector":
                 return selected;
             case "Exit":
                 console.log("Exiting program.");

@@ -1,6 +1,6 @@
 import * as path from "path";
 import { ReadConfig } from "./config/config";
-import { fileReader } from "./utils/fileReader";
+import { fileReader, readWalletConfig } from "./utils/fileReader";
 import { AccountFactory } from "./data/userAccount";
 import * as s from "@solana/web3.js"
 import {userChoice} from "./utils/console_utils";
@@ -9,6 +9,7 @@ import {printStartMessage} from "./utils/startMsg";
 import {ModulesFactory} from "./modules/modulesInit";
 import {LoggerService} from "./logger/logger";
 import {ProcessAccounts} from "./process/actionGenerators";
+import { WalletConfig, WalletConfigFile } from "./globals/types";
 
 (async () => {
   try {
@@ -17,20 +18,23 @@ import {ProcessAccounts} from "./process/actionGenerators";
     await checkVersion(GlobalLogger);
 
     // Абсолютный путь к файлу wallets.txt
-    const solPkFilePath = path.join(__dirname, "data", "wallets.txt");
-    const evmPkFilePath = path.join(__dirname, "data", "evm_wallets.txt");
-    const proxyFilepath = path.join(__dirname, "data", "proxy.txt");
-    const userConfigFilePath = path.join(__dirname, "config", "user_config.json");
-    const devConfigFilePath = path.join(__dirname, "config", "dev_config.json");
+    const solPkFilePath = path.join(process.cwd(), "data", "wallets.txt");
+    const evmPkFilePath = path.join(process.cwd(), "data", "evm_wallets.txt");
+    const proxyFilepath = path.join(process.cwd(), "data", "proxy.txt");
+    const userConfigFilePath = path.join(process.cwd(), "data", "user_config.json");
+    const devConfigFilePath = path.join(process.cwd(), "data", "dev_config.json");
+    const walletConfigPath = path.join(process.cwd(), "data", "wallet_config.json");
+    
 
     // Чтение приватных ключей
     const solPrivateKeys: string[] = await fileReader(solPkFilePath);
     const evmPrivateKeys: string[] = await fileReader(evmPkFilePath);
     const proxies: string[] = await fileReader(proxyFilepath);
+    const walletConfig: WalletConfigFile = (await readWalletConfig(walletConfigPath) ?? { });
 
     const userConfig = await ReadConfig(userConfigFilePath, GlobalLogger);
     const devConfig = await ReadConfig(devConfigFilePath, GlobalLogger);
-    const accounts = await AccountFactory(solPrivateKeys,evmPrivateKeys, proxies, userConfig);
+    const accounts = await AccountFactory(solPrivateKeys,evmPrivateKeys, proxies, walletConfig, userConfig);
     const modules = await ModulesFactory.createModule(devConfig, GlobalLogger);
 
     const userChoiceResult: string = await userChoice();

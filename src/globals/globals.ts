@@ -60,6 +60,8 @@ export const validPairsMap: Map<string, Set<string>> = new Map([
         `${SOL.toString()}_${USDC.toString()}`,
         `${USDT.toString()}_${SOL.toString()}`,
         `${SOL.toString()}_${USDT.toString()}`,
+        `${SOL.toString()}_${ETH.toString()}`,
+        `${ETH.toString()}_${SOL.toString()}`
       ])
     ],
     [
@@ -87,7 +89,8 @@ export const relayTokensMap: Map<string, Map<string, string>> = new Map([
 ])
 
 export const ActionLimiter: Map<string, number> = new Map([
-  ["Relay", 1]
+  ["Relay", 1],
+  ["Collector", 3]
 ])
 
 // Access data from different threads. 

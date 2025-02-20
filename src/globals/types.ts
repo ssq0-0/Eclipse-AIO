@@ -19,3 +19,18 @@ export type SwapPair = {
     TokenTo: PublicKey;    
     Forced: boolean;    
 };
+
+export interface WalletConfig {
+    sol_private_key:string;
+    sol_address: string;
+    proxy: string;
+    tap_wallet: string;
+    tap_private_key: number[];
+    discord_name: number | string;
+    twitter_name: string;
+    jwt: string;
+}
+
+export interface WalletConfigFile {
+    [key: string]: WalletConfig;
+}

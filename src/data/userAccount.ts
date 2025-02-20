@@ -1,7 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Wallet as EvmWallet } from "ethers";
-import {SwapPair} from "../globals/types";
+import {SwapPair, WalletConfigFile} from "../globals/types";
 
 export type Account = {
     EvmAddress: string;
@@ -24,10 +24,19 @@ export type Account = {
     TokenBridge: string;
 }
 
-export async function AccountFactory(solKks: string[], evmPks: string[], proxies: string[], config: any): Promise<Account[]> {
+export async function AccountFactory(
+    solKks: string[], 
+    evmPks: string[], 
+    proxies: string[], 
+    walletConfig: WalletConfigFile, 
+    config: any
+    ): Promise<Account[]> {
     if (solKks.length == 0) {
         throw new Error("Private keys map is empty.")
     }
+    // if (walletConfig === null) {
+    //     throw Error("Файл с историей кошелька не был найден. Создайте пустой wallet_config.json и запустите.")
+    // }
 
     const accoutnPromises = solKks.map(async(pk, index)=>{
         try {
