@@ -9,6 +9,7 @@ import { USDC, relayTokensMap, chainIdsMap } from "../globals/globals";
 import { ethers } from "ethers";
 import {prepareLogInfo} from "../utils/actionLogMsg"
 import { getRandomNumber, getRandomRelayNumber } from "../utils/math";
+import { pause } from "../utils/timeUtils";
 
 export class Relay implements ModulesFasad {
     private apiUrl: string;
@@ -117,9 +118,9 @@ export class Relay implements ModulesFasad {
         }
 
         const amount = convertToDecimals(tokenAddress, bridgeAmount);
-        const userAddr = from === "eclipse" ? acc.Address : wallet
-        const recepientAddr = to === "eclipse" ? acc.Address : wallet
- 
+        const userAddr = from === "eclipse" ? acc.Address : acc.EvmAddress;
+        const recepientAddr = to === "eclipse" ? acc.Address : acc.EvmAddress;
+
         const req = {
             user: userAddr,
             originChainId: inputChainId,
@@ -169,7 +170,7 @@ export class Relay implements ModulesFasad {
             await connection.confirmTransaction(signature);
             return signature;
         } else {
-            const network = acc.FromBridge;
+            const network = acc.BridgeConfig?.from || "";
             const rpcUrl = this.rpcUrl.get(network);
             if (!rpcUrl) {
                 throw new Error(`No RPC URL found for network: ${network}`);

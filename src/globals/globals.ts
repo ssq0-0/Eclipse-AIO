@@ -55,7 +55,8 @@ export const decimalMap: Map<string, number> = new Map([
     ["0x4200000000000000000000000000000000000006", 18],
     ["0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", 18],
     ["0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f", 18],
-    ["11111111111111111111111111111111", 9]
+    ["11111111111111111111111111111111", 9],
+    ["0x0000000000000000000000000000000000000000", 18]
 ]);
 
 export const validPairsMap: Map<string, Set<string>> = new Map([

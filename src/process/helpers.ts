@@ -155,7 +155,7 @@ export function createRelayAction(acc: Account, from: PublicKey, amount: number)
     const action = {
         TokenFrom: from,
         TokenTo: MINOR_ADDR,
-        Amount: acc.BridgeAmount,
+        Amount: 0,
         TypeAction: "bridge",
         Module: "relay"
     };
