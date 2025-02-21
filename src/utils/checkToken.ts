@@ -117,12 +117,12 @@ async function createATA(
   }
 }
 
-export function convertToDecimals(token: PublicKey, amount: number | undefined): number {
+export function convertToDecimals(token: string, amount: number | undefined): number {
   if (typeof amount === "undefined") {
       throw new Error("Amount is required");
   }
   
-  const decimals = decimalMap.get(token.toString());
+  const decimals = decimalMap.get(token);
   if (typeof decimals === "undefined") {
       throw new Error(`Unknown token: ${token.toString()}`);
   }
