@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { Account } from "../data";
 import { LoggerService } from "../logger/logger";
 import { ModulesFasad } from "./modulesInit";
@@ -8,6 +8,7 @@ import { convertToDecimals } from "../utils/checkToken";
 import { USDC, relayTokensMap, chainIdsMap } from "../globals/globals";
 import { ethers } from "ethers";
 import {prepareLogInfo} from "../utils/actionLogMsg"
+import { getRandomNumber, getRandomRelayNumber } from "../utils/math";
 
 export class Relay implements ModulesFasad {
     private apiUrl: string;
@@ -33,7 +34,7 @@ export class Relay implements ModulesFasad {
         for (const step of quote.steps) {
             if (step.kind === 'transaction') {
                 try {
-                   const signature =  await this.processTransactionStep(step, acc);
+                   const signature =  await this.processTransactionStep(step, acc, connection);
                    finalSignature = signature;
                 } catch (error) {
                     this.logger.error(`Error processing step ${step.id}`);
@@ -46,7 +47,7 @@ export class Relay implements ModulesFasad {
     }
 
     private async getQuote(acc: Account, inputMint: PublicKey, outputMint: PublicKey, amount: number): Promise<any> {
-        const reqData = this.prepareData(acc, inputMint, outputMint, amount);
+        const reqData = this.prepareData(acc);
         
         try {
             const response = await axios.post(this.apiUrl, reqData, {
@@ -64,35 +65,70 @@ export class Relay implements ModulesFasad {
         }
     }
 
-    private prepareData(acc: Account, inputMint: PublicKey, outputMint: PublicKey, amount: number): object {
-        const inputChainId = chainIdsMap.get(acc.FromBridge);
-        if (!inputChainId) {
-            throw new Error(`Invalid chainId or fromChain: ${acc.FromBridge}`);
+    private prepareData(acc: Account): object {
+        if (!acc.BridgeConfig) {
+            throw new Error("Bridge configuration is missing for this account.");
+        }
+    
+        const { range, from, to, token, wallet } = acc.BridgeConfig;
+    
+        if (!from || !to || !wallet|| !range || range.length === 0 || token.length === 0) {
+            throw new Error("Bridge configuration is incomplete.");
+        }
+    
+        let bridgeAmount = range[0];
+        if (range.length === 2) {
+            bridgeAmount = getRandomRelayNumber(range[0], range[1]);
+        }
+        const inputChainId = chainIdsMap.get(from);
+        const outputChainId = chainIdsMap.get(to);
+
+        if (!inputChainId || !outputChainId) {
+            throw new Error(`Invalid chainId: from=${from}, to=${to}`);
         }
 
-        const outputChainId = 9286185;
-
-        const inputCurrencyMap = relayTokensMap.get(acc.FromBridge);
+        const inputCurrencyMap = relayTokensMap.get(from);
         if (!inputCurrencyMap) {
-            throw new Error(`Invalid inputCurrency: ${acc.TokenBridge}`);
+            throw new Error(`Invalid inputCurrency: ${from}`);
         }
-        const tokenAddress = inputCurrencyMap.get(acc.TokenBridge);
+
+        let tokenAddress = inputCurrencyMap.get(token[0]);  
         if (!tokenAddress) {
-            throw new Error(`Invalid token: ${acc.FromBridge}`);
+            throw new Error(`Invalid token address: ${token[0]}`);
         }
 
-        const destCurrency = "11111111111111111111111111111111";
-        const convertedAmount = convertToDecimals(USDC, acc.BridgeAmount);
+        if (inputChainId === 9286185) {
+            tokenAddress = "11111111111111111111111111111111";
+        }
 
+
+        const outputCurrencyMap = relayTokensMap.get(to);
+        if (!outputCurrencyMap) {
+            throw new Error(`Invalid inputCurrency: ${to}`);
+        }
+
+        let destAddress = outputCurrencyMap.get(token[1] || token[0]);  
+        if (!destAddress) {
+            throw new Error(`Invalid token address: ${token[0]}`);
+        }
+
+        if (outputChainId === 9286185) {
+            destAddress = "11111111111111111111111111111111";
+        }
+
+        const amount = convertToDecimals(tokenAddress, bridgeAmount);
+        const userAddr = from === "eclipse" ? acc.Address : wallet
+        const recepientAddr = to === "eclipse" ? acc.Address : wallet
+ 
         const req = {
-            user: acc.EvmAddress,
+            user: userAddr,
             originChainId: inputChainId,
             destinationChainId: outputChainId,
             originCurrency: tokenAddress,
-            destinationCurrency:destCurrency,
-            recipient: acc.Address,
+            destinationCurrency: destAddress,
+            recipient: recepientAddr,
             tradeType:"EXACT_INPUT",
-            amount: convertedAmount.toString(),
+            amount: amount.toString(),
             referrer:"relay.link/swap",
             useExternalLiquidity:false,
             useDepositAddress:false,
@@ -100,36 +136,61 @@ export class Relay implements ModulesFasad {
         return req;
     }
 
-    private async processTransactionStep(step: any, acc: Account): Promise<string> {
+    private async processTransactionStep(step: any, acc: Account, connection: Connection): Promise<string> {
         if (!step.items?.[0]?.data) {
             throw new Error("Invalid transaction step structure");
         }
-
-        const network = acc.FromBridge;
-        const rpcUrl = this.rpcUrl.get(network);
-        if (!rpcUrl) {
-            throw new Error(`No RPC URL found for network: ${network}`);
-        }
-
-        const provider = new ethers.JsonRpcProvider(rpcUrl);
-        const wallet = new ethers.Wallet(acc.EvmPrivateKey, provider);
         
         const txData = step.items[0].data;
-        const txRequest: ethers.TransactionRequest = {
-            to: txData.to,
-            value: txData.value ? BigInt(txData.value) : undefined,
-            data: txData.data,
-            gasLimit: txData.gas ? BigInt(txData.gas) : undefined,
-        };
-
-        try {
-            const txResponse = await wallet.sendTransaction(txRequest);
-            await txResponse.wait();
-
-            await new Promise(resolve => setTimeout(resolve, 10_000));
-            return txResponse.hash; 
-        } catch (error) {
-            throw error;
+        
+        if (txData.instructions) {
+            const transaction = new Transaction();
+            for (const instr of txData.instructions) {
+                const keys = instr.keys.map((k: any) => ({
+                    pubkey: new PublicKey(k.pubkey),
+                    isSigner: k.isSigner,
+                    isWritable: k.isWritable
+                }));
+                transaction.add(new TransactionInstruction({
+                    keys,
+                    programId: new PublicKey(instr.programId),
+                    data: Buffer.from(instr.data, 'hex')
+                }));
+            }
+            
+            transaction.feePayer = new PublicKey(acc.Address);
+            const { blockhash } = await connection.getRecentBlockhash();
+            transaction.recentBlockhash = blockhash;
+            
+            transaction.sign(acc.Keypair);
+            
+            const serializedTx = transaction.serialize();
+            const signature = await connection.sendRawTransaction(serializedTx);
+            await connection.confirmTransaction(signature);
+            return signature;
+        } else {
+            const network = acc.FromBridge;
+            const rpcUrl = this.rpcUrl.get(network);
+            if (!rpcUrl) {
+                throw new Error(`No RPC URL found for network: ${network}`);
+            }
+            const provider = new ethers.JsonRpcProvider(rpcUrl);
+            const wallet = new ethers.Wallet(acc.EvmPrivateKey, provider);
+            
+            const txRequest: ethers.TransactionRequest = {
+                to: txData.to,
+                value: txData.value ? BigInt(txData.value) : undefined,
+                data: txData.data,
+                gasLimit: txData.gas ? BigInt(txData.gas) : undefined,
+            };
+    
+            try {
+                const txResponse = await wallet.sendTransaction(txRequest);
+                await txResponse.wait();
+                return txResponse.hash;
+            } catch (error) {
+                throw error;
+            }
         }
     }
 }

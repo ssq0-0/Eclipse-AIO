@@ -20,21 +20,21 @@ import { WalletConfig, WalletConfigFile } from "./globals/types";
     // Абсолютный путь к файлу wallets.txt
     const solPkFilePath = path.join(process.cwd(), "data", "wallets.txt");
     const evmPkFilePath = path.join(process.cwd(), "data", "evm_wallets.txt");
-    const proxyFilepath = path.join(process.cwd(), "data", "proxy.txt");
+    const proxyFilePath = path.join(process.cwd(), "data", "proxy.txt");
+    const bridgeConfigPath = path.join(process.cwd(), "data", "bidger_info.json");
     const userConfigFilePath = path.join(process.cwd(), "data", "user_config.json");
     const devConfigFilePath = path.join(process.cwd(), "data", "dev_config.json");
-    const walletConfigPath = path.join(process.cwd(), "data", "wallet_config.json");
     
 
     // Чтение приватных ключей
     const solPrivateKeys: string[] = await fileReader(solPkFilePath);
     const evmPrivateKeys: string[] = await fileReader(evmPkFilePath);
-    const proxies: string[] = await fileReader(proxyFilepath);
-    const walletConfig: WalletConfigFile = (await readWalletConfig(walletConfigPath) ?? { });
+    const proxies: string[] = await fileReader(proxyFilePath);
 
     const userConfig = await ReadConfig(userConfigFilePath, GlobalLogger);
     const devConfig = await ReadConfig(devConfigFilePath, GlobalLogger);
-    const accounts = await AccountFactory(solPrivateKeys,evmPrivateKeys, proxies, walletConfig, userConfig);
+    const bridgeConfig = await ReadConfig(bridgeConfigPath, GlobalLogger);
+    const accounts = await AccountFactory(solPrivateKeys,evmPrivateKeys, proxies, bridgeConfig, userConfig);
     const modules = await ModulesFactory.createModule(devConfig, GlobalLogger);
 
     const userChoiceResult: string = await userChoice();

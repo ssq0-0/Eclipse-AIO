@@ -58,7 +58,7 @@ export class Orca implements ModulesFasad {
       const ctx = this.initializeContext(acc, connection);
       const walletAddress = ctx.wallet.publicKey.toBase58();
 
-      const converted = convertToDecimals(inputMint, amount);
+      const converted = convertToDecimals(inputMint.toString(), amount);
       let currentAmountBN = new BN(converted.toString());
       let currentMint = inputMint;
 

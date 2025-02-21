@@ -48,7 +48,7 @@ export class Solar implements ModulesFasad {
 
   private async getSwapQuote(inputMint: string, outputMint: string, amount: number): Promise<any> {
     const url = `${this.apiUrl}/compute/swap-base-in`;
-    const converted = convertToDecimals(new PublicKey(inputMint), amount);
+    const converted = convertToDecimals(inputMint, amount);
     const params = {
       inputMint,
       outputMint,
