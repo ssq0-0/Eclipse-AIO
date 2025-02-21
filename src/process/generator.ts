@@ -4,6 +4,7 @@ import { getBalance, getMinSwapValue, getMaxSwapValue, checkAndForceSwap, create
 import { LoggerService } from "../logger/logger";
 import {ETH, MINOR_ADDR, SOL, USDC, USDT} from "../globals/globals";
 import { ActionProcess } from "../globals/types";
+import { getRandomNumber } from "../utils/math";
 
 const actionsgenerators: Map<string, Function> = new Map([
     ['Solar', SwapGenerateAction],
@@ -141,7 +142,7 @@ export async function RelayActionGenerate(acc: Account, connection: Connection, 
     const action = {
         TokenFrom: MINOR_ADDR,
         TokenTo: MINOR_ADDR,
-        Amount: acc.BridgeAmount,
+        Amount: 0,
         TypeAction: "bridge",
         Module: "relay"
     };
