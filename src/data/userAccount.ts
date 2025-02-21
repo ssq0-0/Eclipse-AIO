@@ -1,7 +1,8 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Wallet as EvmWallet } from "ethers";
-import {SwapPair, WalletConfigFile} from "../globals/types";
+import {BridgeConfiguration, SwapPair, WalletBridge, WalletConfigFile} from "../globals/types";
+import {getRandomNumber} from "../utils/math";
 
 export type Account = {
     EvmAddress: string;
@@ -13,30 +14,25 @@ export type Account = {
     ActionCount: number;
     ActionTime: number;
     LastSwaps: SwapPair[];
-    BridgeAmount: number,
     MinEthSwap: number;
     MaxEthSwap: number;
     MinStableSwap: number;
     MaxStableSwap: number;
     MinSolSwap: number;
     MaxSolSwap: number;
-    FromBridge: string;
-    TokenBridge: string;
+    BridgeConfig: WalletBridge | null;
 }
 
 export async function AccountFactory(
     solKks: string[], 
     evmPks: string[], 
     proxies: string[], 
-    walletConfig: WalletConfigFile, 
+    bridgeConfig: BridgeConfiguration,
     config: any
     ): Promise<Account[]> {
     if (solKks.length == 0) {
         throw new Error("Private keys map is empty.")
     }
-    // if (walletConfig === null) {
-    //     throw Error("Файл с историей кошелька не был найден. Создайте пустой wallet_config.json и запустите.")
-    // }
 
     const accoutnPromises = solKks.map(async(pk, index)=>{
         try {
@@ -57,6 +53,7 @@ export async function AccountFactory(
                     // Можно задать значение по умолчанию или оставить пустую строку
                 }
             }
+            const configForAccount = bridgeConfig[evmAddress] || bridgeConfig[pubkey.toString()] || null;
 
             return {
                 EvmAddress: evmAddress,
@@ -75,8 +72,7 @@ export async function AccountFactory(
                 MaxStableSwap: config.max_stable_swap || 10,
                 MinSolSwap: config.min_sol_swap || 0.001,
                 MaxSolSwap: config.max_sol_swap || 0.01,
-                FromBridge: config.from_bridge ?? "",
-                TokenBridge: config.token_bridge ?? "",
+                BridgeConfig: configForAccount,
             } as Account;
         } catch(error){
             console.log("failed parse accs in factory");
@@ -87,8 +83,4 @@ export async function AccountFactory(
     return Promise.all(accoutnPromises).then((accounts) =>
     accounts.filter((account): account is Account => account !== null) 
   );
-}
-
-function getRandomNumber(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
