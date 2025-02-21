@@ -11,6 +11,6 @@
         "to":"arb",
         "wallet":"0x549e6Bf512754Df7C1E509367aFAb118fd15735C",
         "token":["eth"],
-        "range":[0.0389]
+        "range":[0.0389, 0.1]
     }
 }
