@@ -34,3 +34,15 @@ export interface WalletConfig {
 export interface WalletConfigFile {
     [key: string]: WalletConfig;
 }
+
+export type BridgeConfiguration = {
+    [key: string]: WalletBridge;
+}
+
+export type WalletBridge = {
+    from: string;
+    to: string;
+    wallet: string;
+    token: string;
+    range: number[];
+}
