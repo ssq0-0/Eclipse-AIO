@@ -13,6 +13,7 @@ const actionsgenerators: Map<string, Function> = new Map([
     ['Relay', RelayActionGenerate],
     ['Underdog', GenerateUnderdog],
     ['Collector', CollectorAction],
+    ['BalanceCheck', BalanceAction]
     // ['Random', ] // под масштабирование
 ]);
 
@@ -148,4 +149,14 @@ export async function RelayActionGenerate(acc: Account, connection: Connection, 
     };
 
     return action;
+}
+
+export async function BalanceAction(acc: Account, connection: Connection, module:string, logger: LoggerService):Promise<ActionProcess>{
+    return {
+        TokenFrom: MINOR_ADDR,
+        TokenTo: MINOR_ADDR,
+        Amount: 0,
+        TypeAction: "BalanceCheck",
+        Module: "BalanceCheck"
+    }
 }

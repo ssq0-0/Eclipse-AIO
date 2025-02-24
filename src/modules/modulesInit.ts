@@ -7,6 +7,7 @@ import { Lifinity } from "./lifinity";
 import { UnderDog } from "./underdog";
 import { Relay } from "./relay";
 import { Collector } from "./collector";
+import { BalanceChecker } from "./balanceCheck";
 
 export interface ModulesFasad {
     Action(acc: Account, connection: Connection, inputMint: PublicKey, outputMint: PublicKey, amount: number): Promise<string>;
@@ -28,7 +29,8 @@ export class ModulesFactory {
                     ["base", config.base],
                     ["linea", config.linea],
                 ]))],
-                ["Collector", new Collector(config.orca_api, config.eclipse, logger)]
+                ["Collector", new Collector(config.orca_api, config.eclipse, logger)],
+                ["BalanceCheck", new BalanceChecker(logger)]
             ]);
         }
         return this.modules;

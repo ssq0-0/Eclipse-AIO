@@ -87,6 +87,8 @@ export const validPairsMap: Map<string, Set<string>> = new Map([
       new Set([
         `${USDC.toString()}_${SOL.toString()}`,
         `${SOL.toString()}_${USDC.toString()}`,
+        `${ETH.toString()}_${USDC.toString()}`,
+        `${USDC.toString()}_${ETH.toString()}`
       ])
     ]
   ]);
@@ -112,6 +114,7 @@ export const relayTokensMap: Map<string, Map<string, string>> = new Map([
 
 export const ActionLimiter: Map<string, number> = new Map([
   ["Relay", 1],
+  ["BalanceCheck", 1],
   ["Collector", 3]
 ])
 
